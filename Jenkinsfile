@@ -5,7 +5,7 @@ pipeline {
         IMAGE_NAME     = 'placement-predictor'
         CONTAINER_NAME = 'placement-app'
         APP_PORT       = '5000'
-        PATH           = "C:/Program Files/Docker/Docker/resources/bin;${env.PATH}"
+        PATH+DOCKER = 'C:\\Users\\Pruthviraj\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin'
     }
 
     triggers {
