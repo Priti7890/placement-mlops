@@ -8,7 +8,6 @@ pipeline {
     }
 
     triggers {
-        // Poll GitHub every 2 minutes (use a webhook instead if Jenkins is publicly reachable)
         pollSCM('H/2 * * * *')
     }
 
@@ -19,39 +18,25 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Build Docker Image') {
             steps {
-                sh '''
-                    python3 -m venv venv
-                    . venv/bin/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
-                '''
+                bat 'docker build -t %IMAGE_NAME%:%BUILD_NUMBER% -t %IMAGE_NAME%:latest .'
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh '''
-                    . venv/bin/activate
-                    pytest -v
-                '''
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                sh 'docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} -t ${IMAGE_NAME}:latest .'
+                bat 'docker run --rm %IMAGE_NAME%:latest python -m pytest -v'
             }
         }
 
         stage('Deploy Container') {
             steps {
-                sh '''
-                    docker rm -f ${CONTAINER_NAME} || true
-                    docker run -d --name ${CONTAINER_NAME} -p ${APP_PORT}:5000 ${IMAGE_NAME}:latest
-                    sleep 5
-                    curl -f http://localhost:${APP_PORT}/health
+                bat '''
+                    docker rm -f %CONTAINER_NAME%
+                    docker run -d --name %CONTAINER_NAME% -p %APP_PORT%:5000 %IMAGE_NAME%:latest
+                    ping -n 8 127.0.0.1 > nul
+                    curl.exe -f http://localhost:%APP_PORT%/health
                 '''
             }
         }
