@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -5,7 +6,6 @@ pipeline {
         IMAGE_NAME     = 'placement-predictor'
         CONTAINER_NAME = 'placement-app'
         APP_PORT       = '5000'
-        PATH+DOCKER = 'C:\\Users\\Pruthviraj\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin'
     }
 
     triggers {
@@ -21,19 +21,28 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t %IMAGE_NAME%:%BUILD_NUMBER% -t %IMAGE_NAME%:latest .'
+                bat '''
+                    set "PATH=C:\\Users\\Pruthviraj\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin;%PATH%"
+                    where docker
+                    docker --version
+                    docker build -t %IMAGE_NAME%:%BUILD_NUMBER% -t %IMAGE_NAME%:latest .
+                '''
             }
         }
 
         stage('Run Tests') {
             steps {
-                bat 'docker run --rm %IMAGE_NAME%:latest python -m pytest -v'
+                bat '''
+                    set "PATH=C:\\Users\\Pruthviraj\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin;%PATH%"
+                    docker run --rm %IMAGE_NAME%:latest python -m pytest -v
+                '''
             }
         }
 
         stage('Deploy Container') {
             steps {
                 bat '''
+                    set "PATH=C:\\Users\\Pruthviraj\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin;%PATH%"
                     docker rm -f %CONTAINER_NAME%
                     docker run -d --name %CONTAINER_NAME% -p %APP_PORT%:5000 %IMAGE_NAME%:latest
                     ping -n 8 127.0.0.1 > nul
@@ -52,3 +61,4 @@ pipeline {
         }
     }
 }
+
